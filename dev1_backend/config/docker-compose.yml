@@ -1,0 +1,65 @@
+version: '3.8'
+services:
+  # CentOS 7 & nginx
+  server:
+    container_name: 'sandbox_server'
+    build: ./server
+    ports:
+      - '8000:8000'
+    tty: true
+    depends_on:
+      - php
+    restart: always
+    privileged: true
+    command:
+      - /sbin/init
+    volumes:
+      - ./../api:/var/www/html
+      - ./server/nginx/logs:/var/log/nginx
+      - ./server/nginx/conf:/etc/nginx/conf.d
+
+  # php(ComposerとNodeのコンテナでもある)
+  php:
+    container_name: 'sandbox_php'
+    build: ./php
+    ports:
+      - '9000'
+    restart: always
+    tty: true
+    volumes:
+      - ./../api:/var/www/html
+
+  # MySQL
+  mysql:
+    container_name: 'sandbox_mysql'
+    build: ./mysql
+    ports:
+      - '13307:3306'
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: api_db
+      MYSQL_USER: api_user
+      MYSQL_PASSWORD: p@ssw0rd
+      TZ: 'Asia/Tokyo'
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/logs:/var/log/mysql
+
+  # mail (hostへのmail送信設定がめんどくさいので、docker上だけでmail送信できるようにする)
+  mail:
+    container_name: sandbox_mail
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  adminer:
+    container_name: sandbox_adminer
+    hostname: adminer
+    image: adminer:latest
+    restart: always
+    ports:
+      - 18080:8080
+    depends_on:
+      - mysql
