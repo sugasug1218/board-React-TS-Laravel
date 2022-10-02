@@ -1,0 +1,9 @@
+FROM node:16.17
+
+WORKDIR /api-docs
+
+ADD ./api-docs.yaml .
+
+RUN npm install -g @stoplight/prism-cli
+
+CMD ["prism", "mock", "api-docs.yaml", "--host", "0.0.0.0"]
